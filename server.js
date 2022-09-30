@@ -12,9 +12,11 @@ const express = require('express');
 const cors = require('cors');
 
 //load data
-const data = require('./weather.json');
+const data = require('./data/weather.json');
 //Start our server
 const app = express();
+
+const axios = require('axios');
 
 // Middleware 
 //The app.use() function is used to mount the specified middleware function(s) at the path which is being specified 
@@ -30,10 +32,9 @@ app.listen(PORT, () => console.log(`Listening on PORT ${PORT}`));
 // Endpoints:
 //--------------------------
 
-
 class Forecast {
-    constructor(date, hight, lowt, desc){
-        this.description = `Low of ${lowt}, high of ${hight} with ${desc}`
+    constructor(date, hightemp, lowtemp, desc){
+        this.description = `Low of ${lowtemp}, high of ${hightemp} with ${desc}`
         this.date = date;
     }
 }
@@ -42,15 +43,32 @@ app.get("/", (req, res) => {
     res.send('Hello from the home route!');
 });
 
-app.get('/weather',(req,res) => {
+app.get('/weather', async (req,res) => {
+
+try {
+    const { lat, lon } = req.query
+
+const API = `https://api.weatherbit.io/v2.0/current?lat=${lat}&lon=${lon}&key=${process.env.WEATHER_API_KEY}`;
+// const weather = data.find(city => city.city_name.toLowerCase() === searchQuery.toLowerCase())
+const response = await axios.get(API);
+ 
+ res.send(response.data.data.map(a => new Forecast(a.datetime, a.high_temp, a.low_temp, a.weather.description)))
+}
+catch(error){
+
+    console.log(error);
+}
+
 // const city_name = req.query.searchQuery
-const{searchQuery, lat, lon} = req.query
-const weather = data.find(city => city.city_name.toLowerCase() === searchQuery.toLowerCase())
- res.send(weather.data.map(a => new Forecast(a.datetime, a.high_temp, a.low_temp, a.weather.description)))
+
 });
+
+
 
 // Catch all endpoints
 
 app.get('*', (req, res) => {
     res.status(404).send('Page not Found');
 });
+
+
