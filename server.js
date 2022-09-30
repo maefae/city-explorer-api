@@ -48,7 +48,7 @@ app.get('/weather', async (req,res) => {
 try {
     const { lat, lon } = req.query
 
-const API = `https://api.weatherbit.io/v2.0/current?lat=${lat}&lon=${lon}&key=${process.env.WEATHER_API_KEY}`;
+const API = `https://api.weatherbit.io/v2.0/forecast/daily?city=seattle&key=${process.env.WEATHER_API_KEY}`;
 // const weather = data.find(city => city.city_name.toLowerCase() === searchQuery.toLowerCase())
 const response = await axios.get(API);
  
