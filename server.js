@@ -10,12 +10,13 @@ const express = require("express");
 // Allows for cross origin resource sharing
 const cors = require("cors");
 
-//load data
-const data = require("./data/weather.json");
 //Start our server
 const app = express();
 
 const axios = require("axios");
+
+//modules section
+const handleWeather = require("./weather.js");
 
 // Middleware
 //The app.use() function is used to mount the specified middleware function(s) at the path which is being specified
@@ -27,15 +28,9 @@ const PORT = process.env.PORT || 3001;
 // Listening for connection
 app.listen(PORT, () => console.log(`Listening on PORT ${PORT}`));
 
-// Endpoints:
+// Endpoints/routes
 //--------------------------
-
-class Forecast {
-  constructor(date, hightemp, lowtemp, desc) {
-    this.description = `Low of ${lowtemp}, high of ${hightemp} with ${desc}`;
-    this.date = date;
-  }
-}
+app.get("/weather", handleWeather);
 
 class Movies {
   constructor(title) {
@@ -45,30 +40,6 @@ class Movies {
 
 app.get("/", (req, res) => {
   res.send("Hello from the home route!");
-});
-
-app.get("/weather", async (req, res) => {
-  try {
-    const { lat, lon } = req.query;
-
-    const API = `https://api.weatherbit.io/v2.0/forecast/daily?city=seattle&key=${process.env.WEATHER_API_KEY}`;
-    // const weather = data.find(city => city.city_name.toLowerCase() === searchQuery.toLowerCase())
-    const response = await axios.get(API);
-
-    res.send(
-      response.data.data.map(
-        (a) =>
-          new Forecast(
-            a.datetime,
-            a.high_temp,
-            a.low_temp,
-            a.weather.description
-          )
-      )
-    );
-  } catch (error) {
-    console.log(error);
-  }
 });
 
 //getting movies onto backend site
