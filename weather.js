@@ -4,6 +4,8 @@ require("dotenv").config();
 
 const axios = require("axios");
 
+let cache = require("./cache.js");
+
 class Forecast {
   constructor(date, hightemp, lowtemp, desc) {
     this.description = `Low of ${lowtemp}, high of ${hightemp} with ${desc}`;
@@ -16,11 +18,18 @@ async function handleWeather(req, res) {
     const { lat, lon } = req.query;
 
     const API = `https://api.weatherbit.io/v2.0/forecast/daily?city=seattle&key=${process.env.WEATHER_API_KEY}`;
-    // const weather = data.find(city => city.city_name.toLowerCase() === searchQuery.toLowerCase())
-    const response = await axios.get(API);
+    const key = "weather-" + lat + lon;
 
-    res.send(
-      response.data.data.map(
+    if (cache[key] && Date.now() - cache[key].timestamp < 50000) {
+      console.log("Cache hit");
+    } else {
+      console.log("Cache miss");
+      cache[key] = {};
+      cache[key].timestamp = Date.now();
+
+      let weatherData = await axios.get(API);
+
+      cache[key].data = weatherData.data.data.map(
         (a) =>
           new Forecast(
             a.datetime,
@@ -28,8 +37,9 @@ async function handleWeather(req, res) {
             a.low_temp,
             a.weather.description
           )
-      )
-    );
+      );
+    }
+    res.send(cache[key].data);
   } catch (error) {
     console.log(error);
   }
